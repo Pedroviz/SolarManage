@@ -14,13 +14,124 @@ from alerts import get_active_alerts, get_alert_history, acknowledge_alert
 from models import PlantStatus, AlertLevel
 from utils import format_energy_value, calculate_efficiency, get_weather_data
 
-# Page configuration
+# Set page configuration
 st.set_page_config(
-    page_title="Solar Plant Monitoring System",
+    page_title="Monitoramento de Usinas Solares",
     page_icon="☀️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Add custom CSS for improved layout and background
+st.markdown("""
+<style>
+    /* Melhorias gerais de layout */
+    .main .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    
+    /* Fundo gradiente sutil para toda a página */
+    .main {
+        background: linear-gradient(135deg, #f8fafc 0%, #edf6ff 100%);
+    }
+    
+    /* Estilo para os cabeçalhos */
+    h1, h2, h3 {
+        color: #0c4b8e;
+        font-weight: 600;
+    }
+    
+    h1 {
+        font-size: 2.2rem;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(90deg, #1976D2, #64B5F6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+        border-bottom: 2px solid #e0e7ff;
+        padding-bottom: 0.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    h3 {
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    /* Estilo para os elementos de dados */
+    .dataframe {
+        border: none !important;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+    
+    .dataframe thead tr th {
+        background-color: #1976D2;
+        color: white !important;
+        text-align: center !important;
+        padding: 12px 8px !important;
+    }
+    
+    .dataframe tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    
+    /* Melhoria nos espaçamentos */
+    .stTabs [role="tablist"] {
+        gap: 8px;
+    }
+    
+    .stTabs [role="tab"] {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 4px 4px 0 0;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e0e7ff;
+        border-bottom: none;
+    }
+    
+    .stTabs [role="tab"][aria-selected="true"] {
+        background-color: #1976D2;
+        color: white;
+        border-color: #1976D2;
+    }
+    
+    /* Estilo para expander */
+    .streamlit-expanderHeader {
+        font-weight: 600;
+        background-color: rgba(25, 118, 210, 0.05);
+        border-radius: 4px;
+    }
+    
+    /* Scrollbar personalizada */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: #c5d8f1;
+        border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: #1976D2;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Page configuration was set at the top of the file
 
 # Initialize session state if it doesn't exist
 if 'selected_plant' not in st.session_state:
