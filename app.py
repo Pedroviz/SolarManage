@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import time
 import datetime
+import os
 from data_handler import get_plant_data, get_plants, get_plant_details, get_historical_data
 from visualization import (
     plot_energy_production, 
@@ -13,6 +14,8 @@ from visualization import (
 from alerts import get_active_alerts, get_alert_history, acknowledge_alert
 from models import PlantStatus, AlertLevel
 from utils import format_energy_value, calculate_efficiency, get_weather_data
+from ai_chatbot import get_chatbot
+from panel_data_handler import get_panel_by_id, get_all_panels
 
 # Set page configuration
 st.set_page_config(
@@ -40,6 +43,15 @@ if 'date_range' not in st.session_state:
     )
 if 'theme' not in st.session_state:
     st.session_state.theme = "light"  # Default theme is light
+if 'chatbot' not in st.session_state:
+    try:
+        st.session_state.chatbot = get_chatbot()
+    except Exception as e:
+        st.session_state.chatbot = None
+if 'selected_panel' not in st.session_state:
+    st.session_state.selected_panel = None
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
 
 # Function to apply the selected theme
 def apply_theme():
@@ -608,10 +620,11 @@ else:
     create_kpi_metrics(plant_data, plant_details)
     
     # Create tabs for different visualizations
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "Monitoramento em Tempo Real", 
         "Desempenho Histórico", 
-        "Status da Usina"
+        "Status da Usina",
+        "Assistente de IA"
     ])
     
     with tab1:
@@ -817,6 +830,134 @@ else:
             st.dataframe(maintenance_df, use_container_width=True)
         else:
             st.info("Não há atividades de manutenção agendadas.")
+
+    with tab4:
+        # AI Assistant for Solar Panel Health Analysis
+        st.subheader("Assistente de IA para Análise de Painéis")
+        
+        # Check if chatbot is initialized
+        if st.session_state.chatbot is None:
+            st.error("Não foi possível inicializar o assistente de IA. Verifique se a chave API ANTHROPIC_API_KEY está configurada.")
+            
+            # Show API key configuration instructions
+            with st.expander("Como configurar a chave API"):
+                st.markdown("""
+                Para utilizar o assistente de IA, é necessário configurar uma chave API da Anthropic.
+                
+                1. Acesse [console.anthropic.com](https://console.anthropic.com/) e crie uma conta
+                2. Gere uma chave API
+                3. Configure a chave API como variável de ambiente ANTHROPIC_API_KEY
+                """)
+        else:
+            # Panel selection
+            panels = get_all_panels()
+            
+            panel_options = [f"{p['id']} - {p['fabricante']} {p['modelo']}" for p in panels]
+            panel_col1, panel_col2 = st.columns([3, 1])
+            
+            with panel_col1:
+                selected_panel_name = st.selectbox(
+                    "Selecione um painel para análise", 
+                    options=panel_options,
+                    key="panel_selector"
+                )
+            
+            # Extract panel ID from selection
+            selected_panel_id = selected_panel_name.split(" - ")[0]
+            st.session_state.selected_panel = selected_panel_id
+            
+            # Get selected panel data
+            panel_data = get_panel_by_id(selected_panel_id)
+            
+            if panel_data is None:
+                st.error(f"Erro: Não foi possível encontrar dados para o painel {selected_panel_id}")
+            else:
+                with panel_col2:
+                    if st.button("Limpar Conversa", key="clear_chat"):
+                        st.session_state.chatbot.clear_conversation_history()
+                        st.rerun()
+                
+                # Display panel information
+                with st.expander("Informações do Painel", expanded=True):
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown(f"**ID:** {panel_data['id']}")
+                        st.markdown(f"**Fabricante:** {panel_data['fabricante']}")
+                        st.markdown(f"**Modelo:** {panel_data['modelo']}")
+                        st.markdown(f"**Tipo:** {panel_data['tipo']}")
+                        st.markdown(f"**Data de Instalação:** {panel_data['data_instalacao']}")
+                    
+                    with col2:
+                        st.markdown(f"**Potência Nominal:** {panel_data['potencia_nominal']} W")
+                        st.markdown(f"**Eficiência Atual:** {panel_data['eficiencia_atual']}%")
+                        st.markdown(f"**Produção Atual:** {panel_data['producao_atual']} kWh")
+                        st.markdown(f"**Temperatura de Operação:** {panel_data['temperatura_operacao']}°C")
+                        st.markdown(f"**Nível de Sujeira:** {panel_data['nivel_sujeira']}")
+                
+                # Analysis button
+                if st.button("Analisar Saúde do Painel", key="analyze_panel"):
+                    with st.spinner("Analisando dados do painel..."):
+                        try:
+                            analysis = st.session_state.chatbot.analyze_panel_health(panel_data)
+                            st.session_state.last_analysis = analysis
+                            
+                            # Display analysis in a styled container
+                            st.markdown("""
+                            <style>
+                            .analysis-container {
+                                background-color: #f0f7ff;
+                                border-radius: 10px;
+                                padding: 20px;
+                                margin: 15px 0;
+                                border-left: 5px solid #1976D2;
+                            }
+                            </style>
+                            """, unsafe_allow_html=True)
+                            
+                            st.markdown(f'<div class="analysis-container">{analysis}</div>', unsafe_allow_html=True)
+                        except Exception as e:
+                            st.error(f"Erro ao analisar o painel: {str(e)}")
+                
+                # Chat interface
+                st.subheader("Pergunte ao assistente")
+                
+                user_question = st.text_input("Digite sua pergunta sobre painéis solares", key="user_question")
+                
+                if user_question:
+                    with st.spinner("Gerando resposta..."):
+                        try:
+                            response = st.session_state.chatbot.ask_question(user_question, panel_data)
+                            
+                            # Add to chat history
+                            if "chat_history" not in st.session_state:
+                                st.session_state.chat_history = []
+                            
+                            st.session_state.chat_history.append({"user": user_question, "bot": response})
+                            
+                            # Clear the input field
+                            st.text_input("Digite sua pergunta sobre painéis solares", value="", key="user_question_reset")
+                        except Exception as e:
+                            st.error(f"Erro ao processar a pergunta: {str(e)}")
+            
+            # Display chat history
+            if "chat_history" in st.session_state and st.session_state.chat_history:
+                st.subheader("Histórico de conversa")
+                
+                for i, exchange in enumerate(st.session_state.chat_history):
+                    # User message
+                    st.markdown(f"""
+                    <div style="background-color: #e6f2ff; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                        <strong>Você:</strong> {exchange["user"]}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Bot response
+                    st.markdown(f"""
+                    <div style="background-color: #f0f0f0; padding: 10px; border-radius: 10px; margin-bottom: 20px;">
+                        <strong>Assistente:</strong> {exchange["bot"]}
+                    </div>
+                    """, unsafe_allow_html=True)
 
 # Alert panel (conditional)
 if st.session_state.show_alerts:
