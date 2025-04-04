@@ -22,117 +22,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Add custom CSS for improved layout and background
-st.markdown("""
-<style>
-    /* Melhorias gerais de layout */
-    .main .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    
-    /* Fundo gradiente sutil para toda a página */
-    .main {
-        background: linear-gradient(135deg, #f8fafc 0%, #edf6ff 100%);
-    }
-    
-    /* Estilo para os cabeçalhos */
-    h1, h2, h3 {
-        color: #0c4b8e;
-        font-weight: 600;
-    }
-    
-    h1 {
-        font-size: 2.2rem;
-        margin-bottom: 1.5rem;
-        background: linear-gradient(90deg, #1976D2, #64B5F6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    h2 {
-        font-size: 1.5rem;
-        border-bottom: 2px solid #e0e7ff;
-        padding-bottom: 0.5rem;
-        margin-top: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    h3 {
-        font-size: 1.2rem;
-        margin-top: 1rem;
-        margin-bottom: 0.8rem;
-    }
-    
-    /* Estilo para os elementos de dados */
-    .dataframe {
-        border: none !important;
-        border-radius: 5px;
-        overflow: hidden;
-    }
-    
-    .dataframe thead tr th {
-        background-color: #1976D2;
-        color: white !important;
-        text-align: center !important;
-        padding: 12px 8px !important;
-    }
-    
-    .dataframe tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-    
-    /* Melhoria nos espaçamentos */
-    .stTabs [role="tablist"] {
-        gap: 8px;
-    }
-    
-    .stTabs [role="tab"] {
-        background-color: rgba(255, 255, 255, 0.7);
-        border-radius: 4px 4px 0 0;
-        padding: 0.5rem 1rem;
-        border: 1px solid #e0e7ff;
-        border-bottom: none;
-    }
-    
-    .stTabs [role="tab"][aria-selected="true"] {
-        background-color: #1976D2;
-        color: white;
-        border-color: #1976D2;
-    }
-    
-    /* Estilo para expander */
-    .streamlit-expanderHeader {
-        font-weight: 600;
-        background-color: rgba(25, 118, 210, 0.05);
-        border-radius: 4px;
-    }
-    
-    /* Scrollbar personalizada */
-    ::-webkit-scrollbar {
-        width: 10px;
-        height: 10px;
-    }
-    
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 5px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-        background: #c5d8f1;
-        border-radius: 5px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-        background: #1976D2;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Page configuration was set at the top of the file
-
 # Initialize session state if it doesn't exist
 if 'selected_plant' not in st.session_state:
     st.session_state.selected_plant = None
@@ -149,6 +38,217 @@ if 'date_range' not in st.session_state:
         datetime.datetime.now() - datetime.timedelta(days=7),
         datetime.datetime.now()
     )
+if 'theme' not in st.session_state:
+    st.session_state.theme = "light"  # Default theme is light
+
+# Function to apply the selected theme
+def apply_theme():
+    # Set light or dark theme based on session state
+    is_dark_theme = st.session_state.theme == "dark"
+    
+    # Define light and dark themes
+    light_theme = {
+        "bg_main": "linear-gradient(135deg, #f8fafc 0%, #edf6ff 100%)",
+        "bg_card": "#f0f7ff",
+        "bg_sidebar_card": "#f8f9fa",
+        "bg_stats_box": "#f8f9fa",
+        "bg_dataframe_even": "#f8f9fa",
+        "color_text": "#1E293B",
+        "color_text_secondary": "#666",
+        "color_heading": "#0c4b8e",
+        "color_accent": "#1976D2",
+        "color_accent_light": "#64B5F6",
+        "border_light": "#e0e7ff",
+        "scrollbar_track": "#f1f1f1",
+        "scrollbar_thumb": "#c5d8f1"
+    }
+    
+    dark_theme = {
+        "bg_main": "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        "bg_card": "#1e293b",
+        "bg_sidebar_card": "#1e293b",
+        "bg_stats_box": "#1e293b",
+        "bg_dataframe_even": "#2a3a50",
+        "color_text": "#e2e8f0",
+        "color_text_secondary": "#94a3b8",
+        "color_heading": "#90caf9",
+        "color_accent": "#64B5F6",
+        "color_accent_light": "#bbdefb",
+        "border_light": "#334155",
+        "scrollbar_track": "#1e293b",
+        "scrollbar_thumb": "#475569"
+    }
+    
+    # Select the appropriate theme
+    theme = dark_theme if is_dark_theme else light_theme
+    
+    # Apply theme with CSS
+    theme_css = f"""
+    <style>
+        /* Melhorias gerais de layout */
+        .main .block-container {{
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }}
+        
+        /* Fundo gradiente para toda a página */
+        .main {{
+            background: {theme["bg_main"]};
+        }}
+        
+        /* Estilo para os cabeçalhos */
+        h1, h2, h3 {{
+            color: {theme["color_heading"]};
+            font-weight: 600;
+        }}
+        
+        h1 {{
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, {theme["color_accent"]}, {theme["color_accent_light"]});
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }}
+        
+        h2 {{
+            font-size: 1.5rem;
+            border-bottom: 2px solid {theme["border_light"]};
+            padding-bottom: 0.5rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }}
+        
+        h3 {{
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            margin-bottom: 0.8rem;
+        }}
+        
+        /* Ajuste de cores para tema escuro/claro */
+        .sidebar-section {{
+            background-color: {theme["bg_sidebar_card"]} !important;
+            border-left: 3px solid {theme["color_accent"]} !important;
+        }}
+        
+        .sidebar-title {{
+            color: {theme["color_accent"]} !important;
+        }}
+        
+        .plant-info-container {{
+            background-color: {theme["bg_card"]} !important;
+            border-left: 5px solid {theme["color_accent"]} !important;
+        }}
+        
+        .plant-name {{
+            color: {theme["color_accent"]} !important;
+        }}
+        
+        .info-label {{
+            color: {theme["color_text_secondary"]} !important;
+        }}
+        
+        .info-value {{
+            color: {theme["color_text"]} !important;
+        }}
+        
+        .stats-box {{
+            background-color: {theme["bg_stats_box"]} !important;
+            border-left: 4px solid {theme["color_accent"]} !important;
+        }}
+        
+        .stats-title {{
+            color: {theme["color_accent"]} !important;
+        }}
+        
+        /* Estilo para os elementos de dados */
+        .dataframe {{
+            border: none !important;
+            border-radius: 5px;
+            overflow: hidden;
+        }}
+        
+        .dataframe thead tr th {{
+            background-color: {theme["color_accent"]};
+            color: white !important;
+            text-align: center !important;
+            padding: 12px 8px !important;
+        }}
+        
+        .dataframe tbody tr:nth-child(even) {{
+            background-color: {theme["bg_dataframe_even"]};
+        }}
+        
+        /* Melhoria nos espaçamentos */
+        .stTabs [role="tablist"] {{
+            gap: 8px;
+        }}
+        
+        .stTabs [role="tab"] {{
+            background-color: {theme["bg_card"] if is_dark_theme else "rgba(255, 255, 255, 0.7)"};
+            border-radius: 4px 4px 0 0;
+            padding: 0.5rem 1rem;
+            border: 1px solid {theme["border_light"]};
+            border-bottom: none;
+            color: {theme["color_text"]};
+        }}
+        
+        .stTabs [role="tab"][aria-selected="true"] {{
+            background-color: {theme["color_accent"]};
+            color: white;
+            border-color: {theme["color_accent"]};
+        }}
+        
+        /* Estilo para expander */
+        .streamlit-expanderHeader {{
+            font-weight: 600;
+            background-color: {theme["bg_card"]};
+            border-radius: 4px;
+            color: {theme["color_text"]};
+        }}
+        
+        /* Ajustes para inputs e widgets */
+        .stTextInput > div > div {{
+            background-color: {theme["bg_card"]};
+        }}
+        
+        .stSelectbox > div > div > div {{
+            background-color: {theme["bg_card"]};
+            color: {theme["color_text"]};
+        }}
+        
+        /* Ajuste de cores para texto comum */
+        p, span, div:not(.sidebar-title):not(.plant-name):not(.info-label):not(.info-value):not(.stats-title) {{
+            color: {theme["color_text"]};
+        }}
+        
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar {{
+            width: 10px;
+            height: 10px;
+        }}
+        
+        ::-webkit-scrollbar-track {{
+            background: {theme["scrollbar_track"]};
+            border-radius: 5px;
+        }}
+        
+        ::-webkit-scrollbar-thumb {{
+            background: {theme["scrollbar_thumb"]};
+            border-radius: 5px;
+        }}
+        
+        ::-webkit-scrollbar-thumb:hover {{
+            background: {theme["color_accent"]};
+        }}
+    </style>
+    """
+    st.markdown(theme_css, unsafe_allow_html=True)
+    
+# Apply the theme based on the session state
+apply_theme()
+
+# Page configuration was set at the top of the file
 
 # Sidebar
 with st.sidebar:
@@ -234,6 +334,19 @@ with st.sidebar:
     
     show_alerts = st.checkbox("Mostrar Painel de Alertas", value=st.session_state.show_alerts)
     st.session_state.show_alerts = show_alerts
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Theme Selection
+    st.markdown('<div class="sidebar-section"><div class="sidebar-title">Configurações de Aparência</div>', unsafe_allow_html=True)
+    theme_option = st.radio(
+        "Selecionar Tema",
+        options=["Claro", "Escuro"],
+        horizontal=True,
+        index=0 if st.session_state.theme == "light" else 1
+    )
+    
+    # Update theme in session state
+    st.session_state.theme = "light" if theme_option == "Claro" else "dark"
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Information
