@@ -41,12 +41,33 @@ if 'date_range' not in st.session_state:
 
 # Sidebar
 with st.sidebar:
-    st.title("Solar Plant Monitoring")
+    st.title("Monitoramento de Usinas Solares")
+    
+    # Custom sidebar styles
+    st.markdown("""
+    <style>
+    .sidebar-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+        border-left: 3px solid #1976D2;
+    }
+    .sidebar-title {
+        color: #1976D2;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Plant selection
     plants = get_plants()
     plant_options = [p['name'] for p in plants]
-    selected_plant_name = st.selectbox("Select Plant", plant_options)
+    st.markdown('<div class="sidebar-section"><div class="sidebar-title">Selecionar Usina</div>', unsafe_allow_html=True)
+    selected_plant_name = st.selectbox("", plant_options, label_visibility="collapsed")
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Find the selected plant ID
     selected_plant = next((p for p in plants if p['name'] == selected_plant_name), None)
@@ -54,28 +75,28 @@ with st.sidebar:
         st.session_state.selected_plant = selected_plant['id']
     
     # Refresh rate control
-    st.divider()
-    st.subheader("Data Refresh Settings")
+    st.markdown('<div class="sidebar-section"><div class="sidebar-title">Configurações de Atualização</div>', unsafe_allow_html=True)
     refresh_rate = st.slider(
-        "Refresh Rate (seconds)", 
+        "Taxa de Atualização (segundos)", 
         min_value=10, 
         max_value=300, 
         value=st.session_state.refresh_rate, 
         step=10
     )
+    st.markdown('</div>', unsafe_allow_html=True)
     st.session_state.refresh_rate = refresh_rate
     
     # Date range selector for historical data
-    st.divider()
-    st.subheader("Historical Data")
+    st.markdown('<div class="sidebar-section"><div class="sidebar-title">Dados Históricos</div>', unsafe_allow_html=True)
     date_range = st.date_input(
-        "Select Date Range",
+        "Selecionar Período",
         value=(
             st.session_state.date_range[0].date(),
             st.session_state.date_range[1].date()
         ),
         key="date_picker"
     )
+    st.markdown('</div>', unsafe_allow_html=True)
     
     if len(date_range) == 2:
         start_date, end_date = date_range
@@ -85,27 +106,36 @@ with st.sidebar:
         )
     
     # Alert filters
-    st.divider()
-    st.subheader("Alert Settings")
+    st.markdown('<div class="sidebar-section"><div class="sidebar-title">Configurações de Alertas</div>', unsafe_allow_html=True)
     alert_filter = st.selectbox(
-        "Filter Alerts by Level",
-        ["All", "Critical", "Warning", "Information"]
+        "Filtrar Alertas por Nível",
+        ["Todos", "Crítico", "Atenção", "Informação"]
     )
-    st.session_state.alert_filter = alert_filter
     
-    show_alerts = st.checkbox("Show Alert Panel", value=st.session_state.show_alerts)
+    # Map alert filter values to English values used in backend
+    alert_filter_map = {
+        "Todos": "All",
+        "Crítico": "Critical",
+        "Atenção": "Warning",
+        "Informação": "Information"
+    }
+    st.session_state.alert_filter = alert_filter_map.get(alert_filter, "All")
+    
+    show_alerts = st.checkbox("Mostrar Painel de Alertas", value=st.session_state.show_alerts)
     st.session_state.show_alerts = show_alerts
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Information
-    st.divider()
-    st.info("This dashboard displays real-time and historical data from solar plants. Select a plant to view its performance metrics and alerts.")
+    st.markdown('<div class="sidebar-section">', unsafe_allow_html=True)
+    st.info("Este painel exibe dados em tempo real e históricos das usinas solares. Selecione uma usina para visualizar suas métricas de desempenho e alertas.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # Main content
-st.title("Solar Plant Monitoring Dashboard")
+st.title("Painel de Monitoramento de Usinas Solares")
 
 # Check if a plant is selected
 if st.session_state.selected_plant is None:
-    st.warning("Please select a plant from the sidebar to view its monitoring data.")
+    st.warning("Por favor, selecione uma usina no painel lateral para visualizar os dados de monitoramento.")
 else:
     # Get current time and check if data should be refreshed
     current_time = time.time()
@@ -115,90 +145,131 @@ else:
         st.session_state.last_refresh = current_time
     
     # Display last refresh time
-    st.caption(f"Last updated: {datetime.datetime.fromtimestamp(st.session_state.last_refresh).strftime('%Y-%m-%d %H:%M:%S')}")
+    st.caption(f"Última atualização: {datetime.datetime.fromtimestamp(st.session_state.last_refresh).strftime('%Y-%m-%d %H:%M:%S')}")
     
     # Get plant details
     plant_details = get_plant_details(st.session_state.selected_plant)
     
-    # Display plant information
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.subheader(plant_details['name'])
-        st.write(f"Location: {plant_details['location']}")
-        st.write(f"Capacity: {plant_details['capacity']} kW")
+    # Create a card-style container for plant information
+    st.markdown("""
+    <style>
+    .plant-info-container {
+        background-color: #f0f7ff;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 5px solid #1976D2;
+    }
+    .plant-name {
+        color: #1976D2;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    .info-item {
+        margin-bottom: 8px;
+    }
+    .info-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 3px;
+    }
+    .info-value {
+        color: #1E293B;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+    .weather-icon {
+        margin-right: 5px;
+        font-size: 1.2rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
-    with col2:
-        st.write(f"Panels: {plant_details['panels_count']}")
-        st.write(f"Installation Date: {plant_details['installation_date']}")
-        st.write(f"Status: {plant_details['status']}")
+    # Get weather data for the plant location
+    weather = get_weather_data(plant_details['location'])
     
-    with col3:
-        # Get weather data for the plant location
-        weather = get_weather_data(plant_details['location'])
-        st.write(f"Current Weather: {weather['condition']}")
-        st.write(f"Temperature: {weather['temperature']}°C")
-        st.write(f"Irradiance: {weather['irradiance']} W/m²")
+    # Determine weather icon
+    weather_icon = "☀️"
+    if "Cloud" in weather['condition']:
+        weather_icon = "⛅"
+    elif "Rain" in weather['condition']:
+        weather_icon = "🌧️"
+    elif "Night" in weather['condition']:
+        weather_icon = "🌙"
+    
+    # Create the plant info card
+    html_content = f"""
+    <div class="plant-info-container">
+        <div class="plant-name">{plant_details['name']}</div>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <div class="info-label">Localização</div>
+                    <div class="info-value">📍 {plant_details['location']}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Capacidade</div>
+                    <div class="info-value">⚡ {plant_details['capacity']} kW</div>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <div class="info-label">Painéis</div>
+                    <div class="info-value">🔋 {plant_details['panels_count']}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Instalação</div>
+                    <div class="info-value">📅 {plant_details['installation_date']}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">🔌 {plant_details['status']}</div>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <div class="info-label">Clima Atual</div>
+                    <div class="info-value"><span class="weather-icon">{weather_icon}</span> {weather['condition']}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Temperatura</div>
+                    <div class="info-value">🌡️ {weather['temperature']}°C</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Irradiância</div>
+                    <div class="info-value">☀️ {weather['irradiance']} W/m²</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    """
+    st.markdown(html_content, unsafe_allow_html=True)
     
     # Get current plant data
     plant_data = get_plant_data(st.session_state.selected_plant)
     
     # Display KPI metrics
-    st.subheader("Key Performance Indicators")
-    metrics_cols = st.columns(4)
+    st.subheader("Indicadores-Chave de Desempenho")
     
-    # Energy production
-    with metrics_cols[0]:
-        current_production = plant_data['current_production']
-        daily_production = plant_data['daily_production']
-        st.metric(
-            "Current Production", 
-            f"{current_production} kW",
-            f"{round((current_production / plant_details['capacity']) * 100, 1)}% of capacity"
-        )
-    
-    # Daily energy
-    with metrics_cols[1]:
-        daily_target = plant_details['daily_target']
-        daily_percentage = (daily_production / daily_target) * 100 if daily_target > 0 else 0
-        delta = f"{round(daily_percentage, 1)}% of target"
-        delta_color = "normal" if daily_percentage >= 90 else "off"
-        st.metric(
-            "Today's Energy", 
-            f"{daily_production} kWh", 
-            delta,
-            delta_color=delta_color
-        )
-    
-    # Efficiency
-    with metrics_cols[2]:
-        efficiency = plant_data['efficiency']
-        efficiency_delta = efficiency - plant_data['efficiency_yesterday']
-        st.metric(
-            "Current Efficiency", 
-            f"{efficiency}%", 
-            f"{round(efficiency_delta, 1)}% from yesterday"
-        )
-    
-    # Performance ratio
-    with metrics_cols[3]:
-        performance_ratio = plant_data['performance_ratio']
-        performance_delta = performance_ratio - plant_data['performance_ratio_yesterday']
-        st.metric(
-            "Performance Ratio", 
-            f"{performance_ratio}%", 
-            f"{round(performance_delta, 1)}% from yesterday"
-        )
+    # Use the custom KPI metrics function 
+    create_kpi_metrics(plant_data, plant_details)
     
     # Create tabs for different visualizations
     tab1, tab2, tab3 = st.tabs([
-        "Real-time Monitoring", 
-        "Historical Performance", 
-        "Plant Status"
+        "Monitoramento em Tempo Real", 
+        "Desempenho Histórico", 
+        "Status da Usina"
     ])
     
     with tab1:
         # Real-time power gauge
-        st.subheader("Real-time Power Output")
+        st.subheader("Saída de Energia em Tempo Real")
         gauge_cols = st.columns([2, 1])
         
         with gauge_cols[0]:
@@ -208,24 +279,69 @@ else:
             )
         
         with gauge_cols[1]:
-            st.write("**Power Statistics**")
-            st.write(f"Peak Today: {plant_data['peak_power']} kW")
-            st.write(f"Average Today: {plant_data['average_power']} kW")
+            # Custom styled box for power statistics
+            st.markdown("""
+            <style>
+            .stats-box {
+                background-color: #f8f9fa;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-left: 4px solid #1976D2;
+            }
+            .stats-title {
+                color: #1976D2;
+                font-weight: 600;
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+            .stats-item {
+                margin-bottom: 8px;
+                font-size: 0.95rem;
+            }
+            .online-status {
+                color: #4CAF50;
+                font-weight: 500;
+            }
+            .offline-status {
+                color: #F44336;
+                font-weight: 500;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             
-            # Simple inverter status indicators
-            st.write("**Inverter Status**")
+            # Power statistics
+            peak_power = plant_data['peak_power']
+            avg_power = plant_data['average_power']
+            
+            stats_html = f"""
+            <div class="stats-box">
+                <div class="stats-title">Estatísticas de Energia</div>
+                <div class="stats-item">Pico Hoje: <strong>{peak_power} kW</strong></div>
+                <div class="stats-item">Média Hoje: <strong>{avg_power} kW</strong></div>
+            </div>
+            """
+            st.markdown(stats_html, unsafe_allow_html=True)
+            
+            # Inverter status indicators
+            inverter_html = '<div class="stats-box"><div class="stats-title">Status dos Inversores</div>'
+            
             for i, status in enumerate(plant_data['inverter_status']):
-                status_color = "green" if status == "Online" else "red"
-                st.markdown(f"Inverter {i+1}: <span style='color:{status_color}'>{status}</span>", unsafe_allow_html=True)
+                status_class = "online-status" if status == "Online" else "offline-status"
+                status_label = "Online" if status == "Online" else "Offline"
+                inverter_html += f'<div class="stats-item">Inversor {i+1}: <span class="{status_class}">{status_label}</span></div>'
+            
+            inverter_html += '</div>'
+            st.markdown(inverter_html, unsafe_allow_html=True)
         
         # Today's energy production chart
-        st.subheader("Today's Energy Production")
+        st.subheader("Produção de Energia Hoje")
         hourly_data = plant_data['hourly_production']
         plot_energy_production(hourly_data)
     
     with tab2:
         # Historical performance
-        st.subheader("Historical Performance")
+        st.subheader("Desempenho Histórico")
         
         # Get historical data based on the selected date range
         start_date, end_date = st.session_state.date_range
@@ -236,17 +352,17 @@ else:
         )
         
         # Daily production chart
-        st.subheader("Daily Energy Production")
+        st.subheader("Produção Diária de Energia")
         plot_comparison_chart(
             historical_data['dates'],
             historical_data['daily_production'],
             historical_data['daily_target'],
-            "Energy (kWh)",
-            "Daily Production vs Target"
+            "Energia (kWh)",
+            "Produção Diária vs Meta"
         )
         
         # Efficiency chart
-        st.subheader("Efficiency Trend")
+        st.subheader("Tendência de Eficiência")
         plot_efficiency_chart(
             historical_data['dates'],
             historical_data['efficiency']
@@ -254,46 +370,111 @@ else:
     
     with tab3:
         # Plant status and components
-        st.subheader("Plant Components Status")
+        st.subheader("Status dos Componentes da Usina")
         
         # Create status table
         components = plant_data['components_status']
         
+        # Translate component names and column names
+        component_map = {
+            "PV Panels": "Painéis Fotovoltaicos",
+            "Inverters": "Inversores",
+            "Mounting System": "Sistema de Montagem",
+            "AC Subsystem": "Subsistema AC",
+            "Communications": "Comunicações"
+        }
+        
+        status_map = {
+            "Normal": "Normal",
+            "Warning": "Atenção",
+            "Critical": "Crítico"
+        }
+        
+        # Translate component data
+        for comp in components:
+            if comp["component"] in component_map:
+                comp["component"] = component_map[comp["component"]]
+            if comp["status"] in status_map:
+                comp["status"] = status_map[comp["status"]]
+            comp["last_check"] = "Última Verificação: " + comp["last_check"]
+        
         # Create a DataFrame for the status
         status_df = pd.DataFrame(components)
+        status_df.rename(columns={
+            "component": "Componente",
+            "status": "Status",
+            "last_check": "Última Verificação"
+        }, inplace=True)
         
         # Color code the status column
         def highlight_status(val):
             if val == "Normal":
                 return 'background-color: #c6efce; color: #006100'
-            elif val == "Warning":
+            elif val == "Atenção":
                 return 'background-color: #ffeb9c; color: #9c5700'
             else:  # Critical
                 return 'background-color: #ffc7ce; color: #9c0006'
         
-        # Display the styled DataFrame
+        # Display the styled DataFrame with custom CSS
+        st.markdown("""
+        <style>
+        .component-table {
+            font-family: 'Arial', sans-serif;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
         st.dataframe(
             status_df.style.applymap(
                 highlight_status, 
-                subset=['status']
+                subset=['Status']
             ),
-            use_container_width=True
+            use_container_width=True,
+            height=250
         )
         
         # Maintenance Schedule
-        st.subheader("Maintenance Schedule")
+        st.subheader("Agenda de Manutenção")
         maintenance_data = plant_details['maintenance_schedule']
         
         if maintenance_data:
+            # Translate maintenance data
+            for item in maintenance_data:
+                if item.get("task") == "Panel Cleaning":
+                    item["task"] = "Limpeza de Painéis"
+                elif item.get("task") == "Inverter Inspection":
+                    item["task"] = "Inspeção de Inversores"
+                elif item.get("task") == "Inverter Replacement":
+                    item["task"] = "Substituição de Inversores"
+                elif item.get("task") == "Wiring Check":
+                    item["task"] = "Verificação de Fiação"
+                elif item.get("task") == "Annual Maintenance":
+                    item["task"] = "Manutenção Anual"
+                elif item.get("task") == "Site Inspection":
+                    item["task"] = "Inspeção do Local"
+                
+                if item.get("status") == "Scheduled":
+                    item["status"] = "Agendado"
+                elif item.get("status") == "In Progress":
+                    item["status"] = "Em Andamento"
+                elif item.get("status") == "Completed":
+                    item["status"] = "Concluído"
+            
             maintenance_df = pd.DataFrame(maintenance_data)
+            maintenance_df.rename(columns={
+                "task": "Tarefa",
+                "date": "Data",
+                "status": "Status"
+            }, inplace=True)
+            
             st.dataframe(maintenance_df, use_container_width=True)
         else:
-            st.info("No scheduled maintenance activities.")
+            st.info("Não há atividades de manutenção agendadas.")
 
 # Alert panel (conditional)
 if st.session_state.show_alerts:
     st.sidebar.divider()
-    st.sidebar.subheader("Active Alerts")
+    st.sidebar.markdown('<div class="sidebar-section"><div class="sidebar-title">Alertas Ativos</div>', unsafe_allow_html=True)
     
     # Get active alerts based on filter
     alerts = get_active_alerts(
@@ -301,27 +482,102 @@ if st.session_state.show_alerts:
         alert_level=st.session_state.alert_filter if st.session_state.alert_filter != "All" else None
     )
     
+    # Custom alert styling
+    st.sidebar.markdown("""
+    <style>
+    .alert-item {
+        margin-bottom: 10px;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .alert-critical {
+        border-left: 4px solid #F44336;
+    }
+    .alert-warning {
+        border-left: 4px solid #FF9800;
+    }
+    .alert-info {
+        border-left: 4px solid #2196F3;
+    }
+    .alert-header {
+        padding: 8px 12px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .alert-critical .alert-header {
+        background-color: rgba(244, 67, 54, 0.1);
+        color: #d32f2f;
+    }
+    .alert-warning .alert-header {
+        background-color: rgba(255, 152, 0, 0.1);
+        color: #e65100;
+    }
+    .alert-info .alert-header {
+        background-color: rgba(33, 150, 243, 0.1);
+        color: #0277bd;
+    }
+    .alert-timestamp {
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-top: 4px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Translate alert levels
+    alert_level_map = {
+        "Critical": "Crítico",
+        "Warning": "Atenção",
+        "Information": "Informação"
+    }
+    
     if alerts:
         for alert in alerts:
-            # Determine alert color based on level
+            # Translate alert level
+            translated_level = alert_level_map.get(alert['level'], alert['level'])
+            
+            # Determine alert class and color
+            alert_class = alert['level'].lower()
+            if alert_class == "warning":
+                alert_class = "warning"
+            elif alert_class == "information":
+                alert_class = "info"
+            else:
+                alert_class = "critical"
+                
             alert_color = {
-                "Critical": "red",
-                "Warning": "orange",
-                "Information": "blue"
+                "Critical": "#d32f2f",
+                "Warning": "#e65100",
+                "Information": "#0277bd"
             }.get(alert['level'], "gray")
             
-            with st.sidebar.expander(f"{alert['level']}: {alert['title']}"):
-                st.markdown(f"<span style='color:{alert_color}'>{alert['message']}</span>", unsafe_allow_html=True)
-                st.caption(f"Timestamp: {alert['timestamp']}")
+            # Create alert expander with custom styling
+            with st.sidebar.expander(f"{translated_level}: {alert['title']}"):
+                st.markdown(f"<div style='color:{alert_color}'>{alert['message']}</div>", unsafe_allow_html=True)
+                st.caption(f"Horário: {alert['timestamp']}")
                 
-                if st.button("Acknowledge", key=f"ack_{alert['id']}"):
+                # Acknowledge button
+                if st.button("Confirmar", key=f"ack_{alert['id']}"):
                     acknowledge_alert(alert['id'])
-                    st.success("Alert acknowledged")
+                    st.success("Alerta confirmado")
                     # Refresh the page after a short delay
                     time.sleep(1)
                     st.rerun()
     else:
+        # Display message when no alerts
         if st.session_state.alert_filter == "All":
-            st.sidebar.success("No active alerts!")
+            st.sidebar.success("Não há alertas ativos!")
         else:
-            st.sidebar.info(f"No {st.session_state.alert_filter.lower()} alerts active.")
+            # Map back from English to Portuguese for display
+            filter_display = {
+                "Critical": "críticos",
+                "Warning": "de atenção",
+                "Information": "informativos"
+            }.get(st.session_state.alert_filter, st.session_state.alert_filter.lower())
+            st.sidebar.info(f"Não há alertas {filter_display} ativos.")
+    
+    st.sidebar.markdown('</div>', unsafe_allow_html=True)
