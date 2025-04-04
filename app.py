@@ -354,6 +354,126 @@ with st.sidebar:
     st.info("Este painel exibe dados em tempo real e históricos das usinas solares. Selecione uma usina para visualizar suas métricas de desempenho e alertas.")
     st.markdown('</div>', unsafe_allow_html=True)
 
+# Função para exibir o banner da usina
+def display_plant_banner(plant_details):
+    image_path = plant_details.get('image_path', 'assets/images/solar_plant_5.jpg')
+    
+    # Estilo para o banner
+    banner_style = f"""
+    <style>
+        .banner-container {{
+            position: relative;
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }}
+        
+        .banner-image {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+        }}
+        
+        .banner-overlay {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            box-sizing: border-box;
+        }}
+        
+        .banner-title {{
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }}
+        
+        .banner-subtitle {{
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            margin-top: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }}
+        
+        .banner-status {{
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }}
+        
+        .status-operational {{
+            background-color: rgba(76, 175, 80, 0.85);
+            color: white;
+        }}
+        
+        .status-partial {{
+            background-color: rgba(255, 152, 0, 0.85);
+            color: white;
+        }}
+        
+        .status-maintenance {{
+            background-color: rgba(3, 169, 244, 0.85);
+            color: white;
+        }}
+        
+        .status-offline {{
+            background-color: rgba(244, 67, 54, 0.85);
+            color: white;
+        }}
+    </style>
+    """
+    
+    # Determinar a classe de status
+    status = plant_details.get('status', 'Offline')
+    status_class = ""
+    if status == "Operational":
+        status_class = "status-operational"
+    elif status == "Partially Operational":
+        status_class = "status-partial"
+    elif status == "Under Maintenance":
+        status_class = "status-maintenance"
+    else:
+        status_class = "status-offline"
+    
+    # Determinar a exibição do status
+    status_display = {
+        "Operational": "Operacional",
+        "Partially Operational": "Parcialmente Operacional",
+        "Under Maintenance": "Em Manutenção",
+        "Offline": "Offline"
+    }.get(status, "Desconhecido")
+    
+    # HTML do banner
+    banner_html = f"""
+    {banner_style}
+    <div class="banner-container">
+        <img src="{image_path}" class="banner-image" alt="Imagem da usina solar {plant_details.get('name', 'Desconhecida')}">
+        <div class="banner-overlay">
+            <div class="banner-status {status_class}">{status_display}</div>
+            <h1 class="banner-title">{plant_details.get('name', 'Usina Desconhecida')}</h1>
+            <p class="banner-subtitle">📍 {plant_details.get('location', 'Localização desconhecida')} | ⚡ {plant_details.get('capacity', 0)} kW</p>
+        </div>
+    </div>
+    """
+    
+    st.markdown(banner_html, unsafe_allow_html=True)
+
 # Main content
 st.title("Painel de Monitoramento de Usinas Solares")
 
@@ -373,6 +493,9 @@ else:
     
     # Get plant details
     plant_details = get_plant_details(st.session_state.selected_plant)
+    
+    # Exibir o banner da usina
+    display_plant_banner(plant_details)
     
     # Create a card-style container for plant information
     st.markdown("""

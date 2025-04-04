@@ -19,6 +19,7 @@ SAMPLE_PLANTS = [
         "installation_date": "2019-06-15",
         "status": PlantStatus.OPERATIONAL.value,
         "daily_target": 2500,  # kWh
+        "image_path": "assets/images/solar_plant_1.jpg",
         "maintenance_schedule": [
             {"task": "Panel Cleaning", "date": "2023-11-15", "status": "Scheduled"},
             {"task": "Inverter Inspection", "date": "2023-12-01", "status": "Scheduled"},
@@ -33,6 +34,7 @@ SAMPLE_PLANTS = [
         "installation_date": "2020-03-20",
         "status": PlantStatus.OPERATIONAL.value,
         "daily_target": 3750,  # kWh
+        "image_path": "assets/images/solar_plant_2.jpg",
         "maintenance_schedule": [
             {"task": "Wiring Check", "date": "2023-11-10", "status": "Completed"},
             {"task": "Annual Maintenance", "date": "2023-12-15", "status": "Scheduled"},
@@ -47,6 +49,7 @@ SAMPLE_PLANTS = [
         "installation_date": "2021-01-10",
         "status": PlantStatus.PARTIAL.value,
         "daily_target": 1500,  # kWh
+        "image_path": "assets/images/solar_plant_3.jpg",
         "maintenance_schedule": [
             {"task": "Inverter Replacement", "date": "2023-11-05", "status": "In Progress"},
             {"task": "Site Inspection", "date": "2023-11-25", "status": "Scheduled"},
@@ -86,6 +89,7 @@ def get_plant_details(plant_id: str) -> Dict[str, Any]:
             "installation_date": "Unknown",
             "status": PlantStatus.OFFLINE.value,
             "daily_target": 0,
+            "image_path": "assets/images/solar_plant_5.jpg",  # Imagem padrão
             "maintenance_schedule": []
         }
     
