@@ -28,7 +28,7 @@ Aplicação para monitoramento em tempo real de usinas solares com visualizaçã
 
 # Windows
 
-python -m venv .venv
+```python -m venv .venv
 .venv\Scripts\activate
 
 # Linux/macOS
