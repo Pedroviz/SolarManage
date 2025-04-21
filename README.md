@@ -23,12 +23,9 @@ Aplicação para monitoramento em tempo real de usinas solares com visualizaçã
 2. **Configurar ambiente virtual**:
 
    ```bash
-
-   ```
-
 # Windows
 
-```python -m venv .venv
+python -m venv .venv
 .venv\Scripts\activate
 
 # Linux/macOS
